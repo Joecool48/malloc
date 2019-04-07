@@ -22,10 +22,11 @@ size_t ceilSize(float num) {
 
 // creates a new blocks if needed because the size is too much
 void allocateIfNeeded(size_t size) {
+    printf("Allocate if needed\n");
     // we already have enough memory
     if(currentBytesUsed + size < num_blocks * PAGE_SIZE) return;
     // otherwise calculate number of blocks to allocate
-    size_t amountBlocksToAllocate = ceilSize((size - ((num_blocks * PAGE_SIZE) - currentBytesUsed)) / (float)PAGE_SIZE);
+    size_t amountBlocksToAllocate = ceilSize(((size + currentBytesUsed - (num_blocks * PAGE_SIZE))) / (float)PAGE_SIZE);
     if (!startMem)
         startMem = (uint8_t*) sbrk((amountBlocksToAllocate * PAGE_SIZE));
     else
@@ -36,9 +37,10 @@ void allocateIfNeeded(size_t size) {
 // adds a new block to the end of the list by traversing it
 // returns a pointer to the new block starting at the header
 void* allocateNewBlock(size_t size) {
+    printf("Allocating new blocks\n");
     if ((!tail && head) || (!head && tail)) printf("Error with linked list\n");
     // create a new block and assign it to head and tail
-    allocateIfNeeded(size); // determines if sbrk needs to be called to request another block
+    allocateIfNeeded(size + sizeof(header)); // determines if sbrk needs to be called to request another block
     
     uint8_t * currentPtr = startMem + currentBytesUsed;
     header newHeader;
@@ -75,6 +77,7 @@ uint8_t checkCanUse(uint8_t * current, size_t size) {
 uint8_t splitBlockIfNeeded(uint8_t * current, size_t size) {
     header * structPtr = (header*) current;
     if (structPtr->size / 2 >= size - sizeof(header)) {
+        printf("Splitting blocks\n");
         size_t newSize = structPtr->size - size - sizeof(header);
         // allocate a new block within this block, and then add it to the linked list
         uint8_t * newBlockStart = current + sizeof(header) + size;
@@ -103,6 +106,7 @@ size_t getSize(uint8_t * current) {
 }
 
 uint8_t mergeBlocks(uint32_t posFromBeginning, uint32_t numBlocks) {
+    printf("Merging blocks\n");
     // iterate to that position
     uint8_t * current = head;
     uint32_t currentPos = 0;
@@ -127,6 +131,8 @@ uint8_t mergeBlocks(uint32_t posFromBeginning, uint32_t numBlocks) {
     return 1;
 }
 
+
+// problem lies in this function
 void * checkForAvailBlock(size_t size) {
     uint8_t * current = head;
     uint32_t freeBlockCount = 0;
@@ -162,11 +168,11 @@ void* mymalloc(size_t size) {
     if (!head) 
         return (void*)((uint8_t*)allocateNewBlock(size) + sizeof(header));
     // first we must check for available blocks
-    void * avail_block = checkForAvailBlock(size); // see if a block exists thats big enough for us
+    // void * avail_block = checkForAvailBlock(size); // see if a block exists thats big enough for us
     
     // if one isnt big enough
-    if (!avail_block) 
-        avail_block = allocateNewBlock(size);
+    //if (!avail_block) 
+        void * avail_block = allocateNewBlock(size);
 
     return avail_block + sizeof(header);
     

@@ -21,8 +21,8 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-#define MAX_STRING_SIZE 1000
-#define MAX_STRUCTS 1000
+#define MAX_STRING_SIZE 20
+#define MAX_STRUCTS 50
 
 typedef struct {
     char * mem;
@@ -80,7 +80,10 @@ void check() {
     for (int i = 0; i < MAX_STRUCTS; i++) {
         if (static_structs[i].isUsed) {
             // make sure it has right contents
+            printf("malloc: %s\n", malloc_structs[i].mem);
+            printf("static: %s\n", static_structs[i].str);
             if (strcmp(malloc_structs[i].mem, static_structs[i].str)) {
+
                 failed(i);
                 return;
             }
