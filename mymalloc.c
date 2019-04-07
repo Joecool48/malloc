@@ -1,5 +1,4 @@
 #include"mymalloc.h"
-#include<stdint.h>
 
 static uint8_t* head; // pointer to the first block. NULL if none were allocated (head of linked list)
 static uint8_t* tail;
@@ -16,12 +15,17 @@ typedef struct {
     uint8_t * next;
 } header;
 
+size_t ceilSize(float num) {
+    if (num > (size_t)num) return (size_t)num + 1;
+    else return (size_t) num;
+}
+
 // creates a new blocks if needed because the size is too much
 void allocateIfNeeded(size_t size) {
     // we already have enough memory
     if(currentBytesUsed + size < num_blocks * PAGE_SIZE) return;
     // otherwise calculate number of blocks to allocate
-    size_t amountBlocksToAllocate = ceil((size - ((num_blocks * PAGE_SIZE) - currentBytesUsed)) / (float)PAGE_SIZE);
+    size_t amountBlocksToAllocate = ceilSize((size - ((num_blocks * PAGE_SIZE) - currentBytesUsed)) / (float)PAGE_SIZE);
     if (!startMem)
         startMem = (uint8_t*) sbrk((amountBlocksToAllocate * PAGE_SIZE));
     else
@@ -166,4 +170,13 @@ void* mymalloc(size_t size) {
 
     return avail_block + sizeof(header);
     
+}
+
+// free call
+void myfree(void * ptr) {
+    // traverse the list and find which one to free
+    uint8_t * current = ptr;
+    current -= sizeof(header);
+    header * freeHeader = (header*) current;
+    freeHeader->isFree = 1; // simply free the block
 }
