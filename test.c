@@ -105,6 +105,8 @@ void do_tests() {
     do_frees();
     do_mallocs();
     do_frees();
+    do_mallocs();
+    do_frees();
     check(); 
 }
 

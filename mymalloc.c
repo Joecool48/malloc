@@ -22,7 +22,6 @@ size_t ceilSize(float num) {
 
 // creates a new blocks if needed because the size is too much
 void allocateIfNeeded(size_t size) {
-    printf("Allocate if needed\n");
     // we already have enough memory
     if(currentBytesUsed + size < num_blocks * PAGE_SIZE) return;
     // otherwise calculate number of blocks to allocate
@@ -45,7 +44,7 @@ void* allocateNewBlock(size_t size) {
     uint8_t * currentPtr = startMem + currentBytesUsed;
     header newHeader;
     newHeader.size = size;
-    newHeader.isFree = 1;
+    newHeader.isFree = 0;
     newHeader.next = NULL;
     memcpy(currentPtr, &newHeader, sizeof(header)); // copy the header to its position
 
@@ -141,17 +140,21 @@ void * checkForAvailBlock(size_t size) {
     while(current) {
         // found a block that is the right size
         if (checkCanUse(current, size)) {
+            printf("Found block that can work\n");
             // to reduce fragmentation internally we should split the block if it is too big
             (void) splitBlockIfNeeded(current, size);
             if (((header*)current)->size < size) printf("Malloc allocation error\n");
-            return current + sizeof(header);
+            ((header*)current)->isFree = 0;
+            return current;
         }
-        else if (isFree(current)) {
+        else if (0 /*isFree(current)*/) {
+            printf("Is free block\n");
             freeBlockCount += 1;
             freeBlocksTotalSize += getSize(current);
             if (freeBlocksTotalSize >= size) {
                 // we now have enough blocks to merge to get a large enough sized block
                 mergeBlocks(blockPos - freeBlockCount, freeBlockCount); // merge those blocks to create a large enough one
+                               
             }
         }
         else {
@@ -161,6 +164,7 @@ void * checkForAvailBlock(size_t size) {
         blockPos++; // keep track of position in linked list for merging
         current = ((header*)current)->next; 
     }
+    return NULL;
 }
 
 void* mymalloc(size_t size) {
@@ -168,11 +172,11 @@ void* mymalloc(size_t size) {
     if (!head) 
         return (void*)((uint8_t*)allocateNewBlock(size) + sizeof(header));
     // first we must check for available blocks
-    // void * avail_block = checkForAvailBlock(size); // see if a block exists thats big enough for us
+    void * avail_block = checkForAvailBlock(size); // see if a block exists thats big enough for us
     
     // if one isnt big enough
-    //if (!avail_block) 
-        void * avail_block = allocateNewBlock(size);
+    if (!avail_block) 
+        avail_block = allocateNewBlock(size);
 
     return avail_block + sizeof(header);
     
