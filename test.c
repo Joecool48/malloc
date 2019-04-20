@@ -21,8 +21,8 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-#define MAX_STRING_SIZE 20
-#define MAX_STRUCTS 50
+#define MAX_STRING_SIZE 700 
+#define MAX_STRUCTS 200
 
 typedef struct {
     char * mem;
@@ -57,12 +57,13 @@ void do_mallocs() {
     char string_buf[MAX_STRING_SIZE];
     for (int i = 0; i < MAX_STRUCTS; i++) {
         if(!static_structs[i].isUsed) {
-            create_random_string(string_buf, MAX_STRING_SIZE);
-            memcpy(static_structs[i].str, string_buf, MAX_STRING_SIZE);
+            size_t str_size = rand() % (MAX_STRING_SIZE) + 1;
+            create_random_string(string_buf, str_size);
+            memcpy(static_structs[i].str, string_buf, str_size);
             static_structs[i].isUsed = 1;
-            static_structs[i].size = MAX_STRING_SIZE;
-            malloc_structs[i].mem = (char *) mymalloc(MAX_STRING_SIZE);
-            memcpy(malloc_structs[i].mem, string_buf, MAX_STRING_SIZE);
+            static_structs[i].size = str_size;
+            malloc_structs[i].mem = (char *) mymalloc(str_size);
+            memcpy(malloc_structs[i].mem, string_buf, str_size);
         }
     } 
 }
