@@ -22,7 +22,7 @@ uint8_t isFree(uint8_t * current);
 size_t getSize(uint8_t * current);
 
 
-uint8_t mergeBlocks(uint8_t * posFromBeginning, uint32_t numBlocks, size_t needeSize);
+uint8_t mergeBlocks(uint8_t * posFromBeginning, size_t needeSize);
 
 
 void * checkForAvailBlock(size_t size);

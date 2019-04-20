@@ -81,9 +81,10 @@ void printstruct(header * current) {
 // twice the size necissary
 uint8_t splitBlockIfNeeded(uint8_t * current, size_t size) {
     header * structPtr = (header*) current;
-    if (!structPtr->isFree) return -1;
-    printf("Struckptr size: %d Header size: %d\n", structPtr->size, size);
-    if ((structPtr->size) / 2 >= size) {
+    printf("SIZE OF CURRENT %d\n", structPtr->size);
+
+    size_t totalBlockSize = structPtr->size + sizeof(header);
+    if (totalBlockSize / 2 >= size) {
         printf("Splitting blocks\n");
         printstruct(structPtr);
         
@@ -109,18 +110,15 @@ size_t getSize(uint8_t * current) {
     return newPtr->size;
 }
 
-uint8_t mergeBlocks(uint8_t * posFromBeginning, uint32_t numBlocks, size_t neededSize) {
+uint8_t mergeBlocks(uint8_t * posFromBeginning, size_t neededSize) {
     printf("Merging blocks\n");
     header * current = (header*) posFromBeginning; 
     uint8_t * startAnchor = current;
-    uint32_t blockCounter = 0;
     uint32_t totalSize = 0;
     // count through all the blocks
     while(totalSize - sizeof(header) < neededSize) {
         if (current == NULL) printf("Current shouldnt be null\n");
         totalSize += ((header*)current)->size + sizeof(header); // add size
-        printf("Total size: %d\n", totalSize);
-        blockCounter++;
         current = ((header*)current)->next;
     }
     uint8_t * endAnchor = ((header*)current)->next;
@@ -132,15 +130,13 @@ uint8_t mergeBlocks(uint8_t * posFromBeginning, uint32_t numBlocks, size_t neede
 
 void * checkForAvailBlock(size_t size) {
     uint8_t * current = head;
-    uint32_t freeBlockCount = 0;
     uint32_t freeBlocksTotalSize = 0;
-    uint32_t blockPos = 0;
     uint8_t * mergeStart = current;
     while(current) {
         // found a block that is the right size
         //
         // UNCOMMENT LATER
-        if (0 && checkCanUse(current, size)) {
+        if (checkCanUse(current, size)) {
             printf("Found block that can work\n");
             // to reduce fragmentation internally we should split the block if it is too big
             (void) splitBlockIfNeeded(current, size);
@@ -148,24 +144,20 @@ void * checkForAvailBlock(size_t size) {
             ((header*)current)->isFree = 0;
             return current;
         }
-        // UNCOMMENT LATER
         else if (isFree(current)) {
             printf("Is free block\n");
-            freeBlockCount += 1;
             freeBlocksTotalSize += getSize(current) + sizeof(header);
             if (freeBlocksTotalSize - sizeof(header) >= size) {
                 printf("Size needed by merge: %d\n", size);
                 // we now have enough blocks to merge to get a large enough sized block
-                mergeBlocks(mergeStart, freeBlockCount, size); // merge those blocks to create a large enough one
+                mergeBlocks(mergeStart, size); // merge those blocks to create a large enough one
                                
             }
         }
         else {
             mergeStart = current;
-            freeBlockCount = 0;
             freeBlocksTotalSize = 0;
         }
-        blockPos++; // keep track of position in linked list for merging
         current = ((header*)current)->next; 
     }
     return NULL;
